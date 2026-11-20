@@ -3,8 +3,8 @@ from fastapi import FastAPI
 from pydantic import BaseModel, Field
 
 app = FastAPI()
-# Same trusted type as when logging (MLflow 3 skops serialization).
-model = mlflow.sklearn.load_model("model", skops_trusted_types=["sklearn.tree._tree.Tree"])
+# Trusted skops types were stored in the model at log time, so none needed here.
+model = mlflow.sklearn.load_model("model")
 
 
 class PredictRequest(BaseModel):
