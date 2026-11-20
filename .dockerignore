@@ -1,0 +1,7 @@
+model/
+.git
+notebooks
+data
+docs
+mlflow.db
+.venv
