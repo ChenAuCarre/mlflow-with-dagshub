@@ -1,0 +1,30 @@
+name: build-image
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+
+      # The build itself fetches the latest digits-rf model from DagsHub.
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          push: false
+          no-cache: true # layer cache would skip the model fetch and serve a stale model
+          tags: digits-api:ci
+
+      - name: Smoke test /predict
+        run: |
+          docker run -d --name api -p 8000:8000 digits-api:ci
+          for i in $(seq 30); do curl -sf localhost:8000/docs >/dev/null && break; sleep 1; done
+          body=$(python3 -c 'import json; print(json.dumps({"features": [0]*64}))')
+          curl -sf -X POST localhost:8000/predict -H 'content-type: application/json' -d "$body" | tee out.json
+          grep -q prediction out.json
